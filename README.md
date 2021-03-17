@@ -3,7 +3,6 @@
 This package helps you with implementation of Eq and PartialEq for structs.
 You can provide which struct fields to compare and which not.
 
-
 #
 
 When we want to define which fields are omitted, or we want to provide
@@ -39,6 +38,18 @@ pub struct Entity {
 When you provide `#[equalia(hash)]` for struct/enum equalia will automatically
 implement `Hash` trait from given configuration.
 
+@TODO: add enum support
+
+```rust
+#[derive(Equalia)]
+#[equalia(hash)]
+pub enum Enumeration {
+    First,
+    Second,
+    Third(String),
+    Fourth(Entity),
+}
+```
 
 # author
 Peter Vrba <phonkee@pm.me>
