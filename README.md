@@ -44,7 +44,7 @@ When single field ins struct can identify equality with help of function.
 #[equalia(hash)]
 pub struct Entity {
     
-    #[equalia(only(value_func))]
+    #[equalia(only = "value_func")]
     id: u8,
 
     // this value will be ignored
