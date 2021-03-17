@@ -37,6 +37,22 @@ pub struct Entity {
 }
 ```
 
+When single field ins struct can identify equality with help of function.
+
+```rust
+#[derive(Equalia)]
+#[equalia(hash)]
+pub struct Entity {
+    
+    #[equalia(only(value_func))]
+    id: u8,
+
+    // this value will be ignored
+    value2: u8,
+}
+```
+
+
 When you provide `#[equalia(hash)]` for struct/enum equalia will automatically
 implement `Hash` trait from given configuration.
 
