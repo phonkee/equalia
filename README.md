@@ -5,6 +5,7 @@ You can provide which struct fields to compare and which not.
 
 #
 
+#### Structs
 When we want to define which fields are omitted, or we want to provide
 custom function to return value to be compared.
 
@@ -31,6 +32,7 @@ pub struct Entity {
     #[equalia(only)]
     id: u8,
 
+    // this value will be ignored
     value2: u8,
 }
 ```
@@ -38,9 +40,24 @@ pub struct Entity {
 When you provide `#[equalia(hash)]` for struct/enum equalia will automatically
 implement `Hash` trait from given configuration.
 
-@TODO: add enum support
+#
 
+#### Enums:
+
+First define __Entity__ from previous example and add enum example __(Enumeration)__
+§
 ```rust
+#[derive(Equalia)]
+#[equalia(hash)]
+pub struct Entity {
+    
+    #[equalia(only)]
+    id: u8,
+    
+    // this value will be ignored
+    value2: u8,
+}
+
 #[derive(Equalia)]
 #[equalia(hash)]
 pub enum Enumeration {
