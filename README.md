@@ -17,7 +17,7 @@ pub struct Entity {
     #[equalia(skip)]
     value1: u8,
 
-    #[equalia(from = "value_func")]
+    #[equalia(map = "map_func")]
     value2: u8,
 }
 ```
@@ -37,52 +37,11 @@ pub struct Entity {
 }
 ```
 
-When single field ins struct can identify equality with help of function.
-
-```rust
-#[derive(Equalia)]
-#[equalia(hash)]
-pub struct Entity {
-    
-    #[equalia(only = "value_func")]
-    id: u8,
-
-    // this value will be ignored
-    value2: u8,
-}
-```
-
+## Hash
 
 When you provide `#[equalia(hash)]` for struct/enum equalia will automatically
 implement `Hash` trait from given configuration.
 
-#
-
-#### Enums:
-
-First define __Entity__ from previous example and add enum example __(Enumeration)__
-§
-```rust
-#[derive(Equalia)]
-#[equalia(hash)]
-pub struct Entity {
-    
-    #[equalia(only)]
-    id: u8,
-    
-    // this value will be ignored
-    value2: u8,
-}
-
-#[derive(Equalia)]
-#[equalia(hash)]
-pub enum Enumeration {
-    First,
-    Second,
-    Third(String),
-    Fourth(Entity),
-}
-```
 
 # author
 Peter Vrba <phonkee@pm.me>

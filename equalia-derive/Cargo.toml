@@ -13,6 +13,7 @@ name = "equalia_derive"
 proc-macro = true
 
 [dependencies]
+darling = "0.12.2"
 proc-macro2 = "1"
 quote = "1"
 syn = "1"
