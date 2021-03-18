@@ -3,8 +3,9 @@
 use darling::*;
 use proc_macro2::{Ident, TokenStream as SynTokenStream};
 use proc_macro::{TokenStream, Span};
-use syn::{DeriveInput, parse_macro_input, Data, DataStruct, Type};
+use syn::{DeriveInput, parse_macro_input, Data, Type};
 use quote::*;
+use quote::ToTokens;
 
 #[cfg(feature = "nightly")]
 fn error(span: Span, data: &str) -> SynTokenStream {
@@ -34,6 +35,49 @@ impl Equalia {
     }
 }
 
+/// write tokens to stream
+impl ToTokens for Equalia {
+    fn to_tokens(&self, tokens: &mut SynTokenStream) {
+        let i = &self.ident;
+        let has_only_field = self.has_only_field();
+        let mut eq_stream = SynTokenStream::new();
+
+        for field in self.data.as_ref().take_struct().unwrap().fields {
+            let f_ident = &field.ident;
+            if has_only_field {
+                if field.only {
+                    eq_stream.extend(quote! {
+                        if self.#f_ident != other.#f_ident {
+                            return false;
+                        };
+                    });
+                }
+            } else {
+                // no need to use field
+                if field.skip {
+                    continue;
+                }
+                eq_stream.extend(quote! {
+                    if self.#f_ident != other.#f_ident {
+                        return false;
+                    };
+                });
+            }
+        }
+
+        //
+        tokens.extend(quote! {
+            impl PartialEq for #i {
+                fn eq(&self, other: &Self) -> bool {
+                    #eq_stream
+                    true
+                }
+            }
+        });
+    }
+}
+
+
 #[derive(Debug, FromField)]
 #[darling(attributes(equalia), forward_attrs(doc, allow, warn))]
 struct EqualiaField {
@@ -53,39 +97,27 @@ struct EqualiaField {
     map: Option<Ident>,
 }
 
-/// generate actual equalia implementations
-fn generate_equalia(_input: &DeriveInput, _data: &DataStruct) -> std::result::Result<SynTokenStream, SynTokenStream> {
-    let attrs: Equalia = match FromDeriveInput::from_derive_input(_input) {
-        Ok(v) => v,
-        Err(e) => return Err(e.write_errors()),
-    };
 
-    let _has_only_field = attrs.has_only_field();
-
-    println!("this is attrs: {:?}", attrs);
-
-    let i = attrs.ident;
-
-    Ok(quote! {
-        impl PartialEq for #i {
-            fn eq(&self, other: &Self) -> bool {
-                todo!()
-            }
-        }
-        impl Eq for #i{}
-    })
-}
-
-
+// Ok(quote! {#attrs})
+// }
 #[proc_macro_derive(Equalia, attributes(equalia))]
 pub fn derive_equalia(input: TokenStream) -> TokenStream {
     let mut toks = SynTokenStream::new();
     let input: DeriveInput = parse_macro_input!(input);
     if let Data::Struct(_data) = &input.data {
-        toks.extend(match generate_equalia(&input, _data) {
-            Ok(t) => t,
-            Err(t) => t,
-        })
+        let attrs: Equalia = match FromDeriveInput::from_derive_input(&input) {
+            Ok(v) => v,
+            Err(e) => {
+                let e = e.to_string();
+                toks.extend(quote! { compile_error!(#e); });
+                return toks.into();
+            }
+        };
+
+        toks.extend(quote! { #attrs });
+    } else {
+        let e = "equalia only supports structs";
+        toks.extend(quote! { compile_error!(#e); });
     };
 
     toks.into()
