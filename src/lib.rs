@@ -2,21 +2,10 @@
 
 use darling::*;
 use proc_macro2::{Ident, TokenStream as SynTokenStream};
-use proc_macro::{TokenStream, Span};
+use proc_macro::{TokenStream};
 use syn::{DeriveInput, parse_macro_input, Data, Type};
 use quote::*;
 use quote::ToTokens;
-
-#[cfg(feature = "nightly")]
-fn error(span: Span, data: &str) -> SynTokenStream {
-    span.unstable().error(data).emit();
-    SynTokenStream::new()
-}
-
-#[cfg(not(feature = "nightly"))]
-fn error(_: Span, data: &str) -> SynTokenStream {
-    quote! { compile_error!(#data); }
-}
 
 #[derive(Debug, FromDeriveInput)]
 #[darling(attributes(equalia), supports(struct_named))]
@@ -41,11 +30,14 @@ impl ToTokens for Equalia {
         let i = &self.ident;
         let has_only_field = self.has_only_field();
         let mut eq_stream = SynTokenStream::new();
-
+        let mut hash_stream = SynTokenStream::new();
         for field in self.data.as_ref().take_struct().unwrap().fields {
             if has_only_field {
                 if field.only {
                     field.write_eq(&mut eq_stream);
+                    if self.hash {
+                        field.write_hash(&mut hash_stream);
+                    }
                 }
             } else {
                 // no need to use field
@@ -53,6 +45,9 @@ impl ToTokens for Equalia {
                     continue;
                 }
                 field.write_eq(&mut eq_stream);
+                if self.hash {
+                    field.write_hash(&mut hash_stream);
+                }
             }
         }
 
@@ -64,6 +59,17 @@ impl ToTokens for Equalia {
                 }
             }
         });
+
+        if self.hash {
+            tokens.extend(quote! {
+                impl std::hash::Hash for #i {
+                    #[allow(unused_variables)]
+                    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+                        #hash_stream
+                    }
+                }
+            });
+        }
     }
 }
 
@@ -105,6 +111,19 @@ impl EqualiaField {
                     return false;
                 };
             });
+        }
+    }
+
+    fn write_hash(&self, tokens: &mut SynTokenStream) {
+        let f_ident = &self.ident;
+        if let Some(ref x) = self.map {
+            tokens.extend(quote! {
+                #x(&other.#f_ident).hash(state);
+            });
+        } else {
+            tokens.extend(quote! {
+            self.#f_ident.hash(state);
+        });
         }
     }
 }
