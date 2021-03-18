@@ -26,10 +26,21 @@ struct Equalia {
     hash: bool,
 }
 
+/// Equalia implementation
+impl Equalia {
+    // return if we have only fields, so we can ignore all other fields
+    pub fn has_only_field(&self) -> bool {
+        self.data.as_ref().take_struct().unwrap().fields.iter().any(|f| f.only)
+    }
+}
+
 #[derive(Debug, FromField)]
 #[darling(attributes(equalia), forward_attrs(doc, allow, warn))]
 struct EqualiaField {
+    // field name
     ident: Option<Ident>,
+
+    // field type
     ty: Type,
 
     #[darling(default)]
@@ -44,16 +55,16 @@ struct EqualiaField {
 
 /// generate actual equalia implementations
 fn generate_equalia(_input: &DeriveInput, _data: &DataStruct) -> std::result::Result<SynTokenStream, SynTokenStream> {
-    println!("fields: {:?}", _data.fields);
-    let eq_attrs: Equalia = match FromDeriveInput::from_derive_input(_input) {
+    let attrs: Equalia = match FromDeriveInput::from_derive_input(_input) {
         Ok(v) => v,
         Err(e) => return Err(e.write_errors()),
     };
 
+    let _has_only_field = attrs.has_only_field();
 
-    println!("equalia: {:?}", eq_attrs.ident);
+    println!("this is attrs: {:?}", attrs);
 
-    let i = eq_attrs.ident;
+    let i = attrs.ident;
 
     Ok(quote! {
         impl PartialEq for #i {
@@ -61,6 +72,7 @@ fn generate_equalia(_input: &DeriveInput, _data: &DataStruct) -> std::result::Re
                 todo!()
             }
         }
+        impl Eq for #i{}
     })
 }
 
