@@ -20,6 +20,12 @@ pub struct Entity {
     #[equalia(map = "map_func")]
     value2: u8,
 }
+
+// map function that changes value
+fn map_func(input: &u8) -> u8 {
+    input * 2
+}
+
 ```
 
 When single field ins struct can identify equality.
