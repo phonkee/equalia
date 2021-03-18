@@ -43,25 +43,16 @@ impl ToTokens for Equalia {
         let mut eq_stream = SynTokenStream::new();
 
         for field in self.data.as_ref().take_struct().unwrap().fields {
-            let f_ident = &field.ident;
             if has_only_field {
                 if field.only {
-                    eq_stream.extend(quote! {
-                        if self.#f_ident != other.#f_ident {
-                            return false;
-                        };
-                    });
+                    eq_stream.extend(quote! {#field});
                 }
             } else {
                 // no need to use field
                 if field.skip {
                     continue;
                 }
-                eq_stream.extend(quote! {
-                    if self.#f_ident != other.#f_ident {
-                        return false;
-                    };
-                });
+                eq_stream.extend(quote! {#field});
             }
         }
 
@@ -95,6 +86,28 @@ struct EqualiaField {
 
     #[darling(default)]
     map: Option<Ident>,
+}
+
+impl ToTokens for EqualiaField {
+    fn to_tokens(&self, tokens: &mut SynTokenStream) {
+        let f_ident = &self.ident;
+        let _f_ty = &self.ty;
+
+        if let Some(ref x) = self.map {
+            tokens.extend(quote! {
+                // TODO: give better error when types don't match
+                if #x(&self.#f_ident) != #x(&other.#f_ident) {
+                    return false;
+                };
+            });
+        } else {
+            tokens.extend(quote! {
+                if self.#f_ident != other.#f_ident {
+                    return false;
+                };
+            });
+        }
+    }
 }
 
 

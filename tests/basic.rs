@@ -12,7 +12,7 @@ struct Example {
     #[equalia(only)]
     name: String,
 
-    #[equalia(only, map = "map_func")]
+    #[equalia(only)]
     address: String,
 
     #[equalia(skip)]
@@ -26,6 +26,17 @@ struct OnlyTest {
     name: String,
     #[equalia(only)]
     address: String,
+}
+
+fn hello(_: &u8) -> u8 {
+    1
+}
+
+
+#[derive(Debug, Default, Equalia)]
+struct MapTest {
+    #[equalia(map = "hello")]
+    id: u8,
 }
 
 
