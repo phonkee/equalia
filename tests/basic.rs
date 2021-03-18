@@ -34,6 +34,7 @@ fn hello(_: &u8) -> u8 {
 
 
 #[derive(Debug, Default, Equalia)]
+#[equalia(hash)]
 struct MapTest {
     #[equalia(map = "hello")]
     id: u8,
@@ -52,6 +53,10 @@ mod tests {
         s1.name = "other".to_owned();
         s2.id = 1;
         assert_eq!(s1, s2);
+
+        // let mut hasher = DefaultHasher::new();
+        // s1.hash(hasher);
+        // println!("Hash is {:x}!", hasher.finish());
     }
 }
 

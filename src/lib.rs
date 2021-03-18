@@ -60,11 +60,12 @@ impl ToTokens for Equalia {
             }
         });
 
+        // provide Hash implementation if needed
         if self.hash {
             tokens.extend(quote! {
-                impl std::hash::Hash for #i {
+                impl ::std::hash::Hash for #i {
                     #[allow(unused_variables)]
-                    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+                    fn hash<H: ::std::hash::Hasher>(&self, state: &mut H) {
                         #hash_stream
                     }
                 }
@@ -118,12 +119,12 @@ impl EqualiaField {
         let f_ident = &self.ident;
         if let Some(ref x) = self.map {
             tokens.extend(quote! {
-                #x(&other.#f_ident).hash(state);
+                #x(&self.#f_ident).hash(state);
             });
         } else {
             tokens.extend(quote! {
-            self.#f_ident.hash(state);
-        });
+                self.#f_ident.hash(state);
+            });
         }
     }
 }
