@@ -45,18 +45,17 @@ impl ToTokens for Equalia {
         for field in self.data.as_ref().take_struct().unwrap().fields {
             if has_only_field {
                 if field.only {
-                    eq_stream.extend(quote! {#field});
+                    field.write_eq(&mut eq_stream);
                 }
             } else {
                 // no need to use field
                 if field.skip {
                     continue;
                 }
-                eq_stream.extend(quote! {#field});
+                field.write_eq(&mut eq_stream);
             }
         }
 
-        //
         tokens.extend(quote! {
             impl PartialEq for #i {
                 fn eq(&self, other: &Self) -> bool {
@@ -88,8 +87,8 @@ struct EqualiaField {
     map: Option<Ident>,
 }
 
-impl ToTokens for EqualiaField {
-    fn to_tokens(&self, tokens: &mut SynTokenStream) {
+impl EqualiaField {
+    fn write_eq(&self, tokens: &mut SynTokenStream) {
         let f_ident = &self.ident;
         let _f_ty = &self.ty;
 
