@@ -1,10 +1,11 @@
 [package]
 name = "equalia"
 version = "0.1.0"
-authors = ["phonkee <phonkee@pm.me>"]
+authors = ["Peter Vrba <phonkee@pm.me>"]
 edition = "2018"
 description = "Automatically implement PartialEq for your structs"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/phonkee/equalia/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
