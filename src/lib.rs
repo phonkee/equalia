@@ -29,6 +29,7 @@ impl ToTokens for Equalia {
     fn to_tokens(&self, tokens: &mut SynTokenStream) {
         let i = &self.ident;
         let has_only_field = self.has_only_field();
+        let mut map_stream = SynTokenStream::new();
         let mut eq_stream = SynTokenStream::new();
         let mut hash_stream = SynTokenStream::new();
         for field in self.data.as_ref().take_struct().unwrap().fields {
@@ -38,6 +39,7 @@ impl ToTokens for Equalia {
                     if self.hash {
                         field.write_hash(&mut hash_stream);
                     }
+                    field.write_map_constraint(&mut map_stream);
                 }
             } else {
                 // no need to use field
@@ -48,8 +50,11 @@ impl ToTokens for Equalia {
                 if self.hash {
                     field.write_hash(&mut hash_stream);
                 }
+                field.write_map_constraint(&mut map_stream);
             }
         }
+
+        tokens.extend(quote! {#map_stream});
 
         tokens.extend(quote! {
             impl PartialEq for #i {
@@ -95,6 +100,7 @@ struct EqualiaField {
 }
 
 impl EqualiaField {
+    fn write_map_constraint(&self, tokens: &mut SynTokenStream) {}
     fn write_eq(&self, tokens: &mut SynTokenStream) {
         let f_ident = &self.ident;
         let _f_ty = &self.ty;
@@ -151,6 +157,8 @@ pub fn derive_equalia(input: TokenStream) -> TokenStream {
         let e = "equalia only supports structs";
         toks.extend(quote! { compile_error!(#e); });
     };
+
+    println!("toks: {}", toks.to_string());
 
     toks.into()
 }
